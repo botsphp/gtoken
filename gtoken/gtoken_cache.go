@@ -20,7 +20,7 @@ func (m *GfToken) setCache(cacheKey string, userCache g.Map) Resp {
 			glog.Error("[GToken]cache json encode error", err1)
 			return Error("cache json encode error")
 		}
-		_, err := g.Redis().Do("SETEX", cacheKey, m.Timeout, cacheValueJson)
+		_, err := g.Redis().Do("SETEX", cacheKey, m.Timeout/1000, cacheValueJson)
 		if err != nil {
 			glog.Error("[GToken]cache set error", err)
 			return Error("cache set error")
@@ -37,7 +37,11 @@ func (m *GfToken) getCache(cacheKey string) Resp {
 	var userCache g.Map
 	switch m.CacheMode {
 	case CacheModeCache:
-		userCacheValue := gcache.Get(cacheKey)
+		userCacheValue, err := gcache.Get(cacheKey)
+		if err != nil {
+			glog.Error("[GToken]cache get error", err)
+			return Error("cache get error")
+		}
 		if userCacheValue == nil {
 			return Unauthorized("login timeout or not login", "")
 		}
